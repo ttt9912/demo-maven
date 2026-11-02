@@ -1,4 +1,7 @@
-package ch.ttt.demo_maven
+/*
+                                * Copyright (c) 2026 ttt. All rights reserved.
+                                */
+package ch.ttt.demomaven
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -7,5 +10,5 @@ import org.springframework.boot.runApplication
 class DemoMavenApplication
 
 fun main(args: Array<String>) {
-	runApplication<DemoMavenApplication>(*args)
+    runApplication<DemoMavenApplication>(*args)
 }

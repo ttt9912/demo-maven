@@ -1,8 +1,12 @@
-package ch.ttt.demo_github_actions
+/*
+                                * Copyright (c) 2026 ttt. All rights reserved.
+                                */
+package ch.ttt.demomaven
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import kotlin.collections.get
 
 class ProductControllerTest {
     private val controller = ProductController()
