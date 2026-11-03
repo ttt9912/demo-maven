@@ -1,6 +1,4 @@
-/*
-                                * Copyright (c) 2026 ttt. All rights reserved.
-                                */
+/* Copyright (c) 2026 ttt. All rights reserved. */
 package ch.ttt.demomaven
 
 import org.junit.jupiter.api.Assertions.assertEquals

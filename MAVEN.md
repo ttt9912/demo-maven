@@ -23,7 +23,7 @@ doesn’t package anything.
 To compile the tests too, use `mvn test-compile`. To compile and run them, use `mvn test`.
 
 **For Kotlin:** the `kotlin-maven-plugin` compiles src/main/kotlin. It uses the compiler arguments (-Xjsr305=strict,
-etc.)and the spring all-open plugin, which makes @Component/@Configuration classes open so Spring can proxy them.
+etc.)and the spring allopen plugin, which makes @Component/@Configuration classes open so Spring can proxy them.
 
 **Dependencies:** Maven resolves the compile-scope (and provided-scope) dependencies at this point, and downloads them
 into `~/.m2` if they’re missing. Test-scoped dependencies like spring-boot-starter-webmvc-test are not needed yet.
@@ -57,15 +57,52 @@ Resources at `process-resources`:
 * **maven-resources-plugin** with filtering, which the Spring Boot parent already configures.
 * **frontend-maven-plugin**, when a Spring app bundles a JS frontend. It’s usually bound to generate-resources.
 
+## mvn test
+
 ## mvn package
+
+`mvn package` bundles the compiled output into a distributable file in `target/`, usually a JAR or WAR depending on
+`<packaging>` (the default is jar).
+
+What happens in this project at `package`:
+
+* **maven-jar-plugin builds** a plain JAR, target/demo-maven-0.0.1-SNAPSHOT.jar, containing only the classes and
+  resources.
+* **spring-boot-maven-plugin:repackage** (bound automatically by the Spring Boot parent) then turns it into an
+  executable fat JAR. It adds all runtime dependencies under BOOT-INF/lib plus Spring Boot’s launcher, so you can run
+  java -jar target/demo-maven-0.0.1-SNAPSHOT.jar. The original thin JAR is kept as
+  demo-maven-0.0.1-SNAPSHOT.jar.original.
+
+NOTE: In CI, prefer `mvn verify` over package, so the integration tests and any verify-phase checks also run.
 
 ## mvn verify
 
-TODO: detekt (detekt-maven-plugin), the static analysis tool for Kotlin. It’s usually bound to verify, but some teams
-run it early at compile or process-classes.
+`mvn verify` runs integration tests and final quality checks on the packaged artifact. It’s the last phase before
+anything leaves your machine.
+
+**Failsafe** runs at `integration-test`. It picks up test classes named *IT, IT*, or *ITCase. Surefire skips those
+names, so unit tests and integration tests stay separate. Failsafe’s integration-test goal doesn’t fail the build when
+tests fail; it only records the results to `target/failsafe-reports`. Its verify goal fails the build later, at the
+verify phase. This split lets post-integration-test cleanup still run, so no container or server is left behind.
+
+#### Plugins
+
+Plugins commonly bound to verify:
+
+* **JaCoCo check**
+    * Fails the build if code coverage falls below the thresholds you set.
+    * Reports to `target/site/jacoco/index.html`
+* **detekt** (Kotlin) or **SpotBugs/PMD** (Java) for static analysis.
+    * Reports to `target/detekt.html` and
+      `target/detekt.xml`.
+    * To adjust the rules, run `./mvnw detekt:generate-config` and point the plugin at the generated
+      `detekt.yml`
+* **Testcontainers-based tests**, which don’t need a plugin: they run as part of the Failsafe tests and start Docker
+  containers themselves
 
 ## mvn install
 
 ## mvn site
 
 ## mvn deploy
+

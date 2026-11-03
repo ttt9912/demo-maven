@@ -14,8 +14,17 @@
     <properties>
         <java.version>25</java.version>
         <kotlin.version>2.3.21</kotlin.version>
+
+        <!-- Build-quality plugins -->
         <spotless-maven-plugin.version>3.8.0</spotless-maven-plugin.version>
         <maven.min.version>3.9.0</maven.min.version>
+        <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+        <detekt-maven-plugin.version>1.23.8</detekt-maven-plugin.version>
+        <dependency-check-maven.version>13.0.0</dependency-check-maven.version>
+
+        <!-- Quality gates -->
+        <jacoco.minimum.line.coverage>0.7</jacoco.minimum.line.coverage>
+        <owasp.fail.cvss>7</owasp.fail.cvss>
     </properties>
     <dependencies>
         <dependency>
@@ -50,12 +59,10 @@
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <!-- mvn validate -->
-            <!-- maven-enforcer-plugin: check minimum versions, banned dependencies, dependency convergence, or no SNAPSHOT dependencies in releases -->
+            <!-- ============================================================
+                 validate phase
+                 ============================================================ -->
+            <!-- check minimum versions, banned dependencies, dependency convergence, or no SNAPSHOT dependencies in releases -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -108,11 +115,10 @@
                             <include>src/test/kotlin/**/*.kt</include>
                         </includes>
                         <ktlint/>
-                        <!-- Adds license header to every class file -->
+                        <!-- Adds license header to every class file (execute mvn spotless:apply) -->
                         <licenseHeader>
-                            <content>/*
-                                * Copyright (c) $YEAR ttt. All rights reserved.
-                                */
+                            <content>
+                                /* Copyright (c) $YEAR ttt. All rights reserved. */
                             </content>
                         </licenseHeader>
                     </kotlin>
@@ -140,19 +146,9 @@
                 </configuration>
             </plugin>
 
-            <!-- Integration tests (mvn verify) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- ============================================================
+                 compile phase
+                 ============================================================ -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -173,7 +169,164 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
+            <!-- ============================================================
+                 package phase
+                 ============================================================ -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- ============================================================
+                 verify phase: coverage + static analysis
+                 (declared after failsafe so they run after the integration tests)
+                 ============================================================ -->
+            <!-- Integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- JaCoCo: one agent covers both unit (Surefire) and integration (Failsafe) tests,
+                 because both plugins pick up the ${argLine} property set by prepare-agent.
+                 If you ever configure <argLine> yourself, include @{argLine} in it.
+                 Report: target/site/jacoco/index.html -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <configuration>
+                    <excludes>
+                        <!-- Spring Boot main() entry point -->
+                        <exclude>**/*ApplicationKt.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <!-- Build fails if below this ration (0.7) -->
+                                            <minimum>${jacoco.minimum.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- detekt: Kotlin static analysis. Uses detekt's default rule set.
+                 To customise: ./mvnw detekt:generate-config, then add
+                 <config>detekt.yml</config> and <buildUponDefaultConfig>true</buildUponDefaultConfig>.
+                 Reports: target/detekt.html, target/detekt.xml -->
+            <plugin>
+                <groupId>com.github.ozsie</groupId>
+                <artifactId>detekt-maven-plugin</artifactId>
+                <version>${detekt-maven-plugin.version}</version>
+                <configuration>
+                    <input>${project.basedir}/src/main/kotlin,${project.basedir}/src/test/kotlin</input>
+                    <report>
+                        <report>html:${project.build.directory}/detekt.html</report>
+                        <report>xml:${project.build.directory}/detekt.xml</report>
+                    </report>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>detekt-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
+    <profiles>
+        <!-- OWASP Dependency-Check: scans dependencies against the NVD for known CVEs.
+             Kept out of the default build because it downloads/updates a large vulnerability
+             database (slow, needs network).
+
+             Run with: ./mvnw verify -Powasp
+
+             Get a free NVD API key (https://nvd.nist.gov/developers/request-an-api-key)
+             and export it as NVD_API_KEY, otherwise updates are extremely slow.
+
+             Report: target/dependency-check-report.html
+
+             In CI: run this check as a separate nightly or weekly job, and cache
+             `~/.m2/repository/org/owasp/dependency-check-data` between runs.
+             -->
+        <profile>
+            <id>owasp</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${dependency-check-maven.version}</version>
+                        <configuration>
+                            <!-- Free Api Key. Without it download is really slow.
+                            `export NVD_API_KEY=your-key-here` -->
+                            <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
+                            <!-- Fails the build for any dependency with a **CVSS** score of 7 or higher-->
+                            <failBuildOnCVSS>${owasp.fail.cvss}</failBuildOnCVSS>
+                            <skipTestScope>true</skipTestScope>
+                            <!-- Sonatype OSS Index now requires credentials; NVD alone is enough here -->
+                            <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+                            <formats>
+                                <format>HTML</format>
+                                <format>JSON</format>
+                            </formats>
+                            <!-- Accept false positives here once you have reviewed them -->
+                            <!-- <suppressionFiles><suppressionFile>owasp-suppressions.xml</suppressionFile></suppressionFiles> -->
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>owasp-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

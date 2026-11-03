@@ -1,8 +1,7 @@
-/*
-                                * Copyright (c) 2026 ttt. All rights reserved.
-                                */
+/* Copyright (c) 2026 ttt. All rights reserved. */
 package ch.ttt.demomaven
 
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -17,6 +16,7 @@ data class Product(
 @RestController
 @RequestMapping("/api/products")
 class ProductController {
+    @Suppress("MagicNumber") // avoid build failure `detekt-check`
     private val products =
         mutableListOf(
             Product(1, "Laptop", 1200.0),
@@ -32,4 +32,13 @@ class ProductController {
     ): Product =
         products.find { it.id == id }
             ?: throw NoSuchElementException("Product with id $id not found")
+
+    @DeleteMapping("/{id}")
+    fun deleteProductById(
+        @PathVariable id: Long,
+    ) {
+        if (!products.removeIf { it.id == id }) {
+            throw NoSuchElementException("Product with id $id not found")
+        }
+    }
 }

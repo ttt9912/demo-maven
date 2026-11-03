@@ -1,6 +1,4 @@
-/*
-                                * Copyright (c) 2026 ttt. All rights reserved.
-                                */
+/* Copyright (c) 2026 ttt. All rights reserved. */
 package ch.ttt.demomaven
 
 import org.junit.jupiter.api.Test
@@ -9,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import kotlin.test.Ignore
 
 @SpringBootTest
 @AutoConfigureMockMvc
