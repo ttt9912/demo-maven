@@ -6,7 +6,7 @@ By default, Maven itself checks that:
 * parent POMs and imports can be resolved, and inheritance and interpolation work (e.g. ${property} references)
 * the reactor can be ordered in a multi-module build, with no cyclic dependencies between modules
 
-#### Plugins
+### Plugins
 
 Teams often bind their own checks to this phase, so they run early and fail fast:
 
@@ -28,7 +28,7 @@ etc.)and the spring allopen plugin, which makes @Component/@Configuration classe
 **Dependencies:** Maven resolves the compile-scope (and provided-scope) dependencies at this point, and downloads them
 into `~/.m2` if they’re missing. Test-scoped dependencies like spring-boot-starter-webmvc-test are not needed yet.
 
-#### Plugins
+### Plugins
 
 These are the plugins people commonly attach to compile itself or to the phases just before it:
 
@@ -85,7 +85,7 @@ names, so unit tests and integration tests stay separate. Failsafe’s integrati
 tests fail; it only records the results to `target/failsafe-reports`. Its verify goal fails the build later, at the
 verify phase. This split lets post-integration-test cleanup still run, so no container or server is left behind.
 
-#### Plugins
+### Plugins
 
 Plugins commonly bound to verify:
 
@@ -102,7 +102,55 @@ Plugins commonly bound to verify:
 
 ## mvn install
 
+`mvn install` builds your project and copies the result into your local Maven repository (usually `~/.m2/repository`),
+so other projects on the same machine can use it as a dependency.
+
+Why it matters: If project B depends on project A, and A isn’t published to a remote repository, you run mvn install in
+A. Then B can resolve A from the local repo. It’s also how multi-module builds share artifacts between separate builds.
+
+### Plugins
+
+Few plugins bind to the install phase itself.
+Most of what affects install comes from plugins bound earlier, which attach extra files that install then copies along
+with the main artifact
+
 ## mvn site
+
+`mvn site` generates a project documentation website from your POM and any extra docs you’ve written.
+
+Contains resources from:
+
+* Reports configured in the `<reporting>` section of the POM, such as Javadoc, Surefire test results, JaCoCo coverage,
+  Checkstyle, PMD, SpotBugs, and Javadoc cross-reference (JXR)
+* Hand-written pages you put in `src/site/markdown/`, written in Markdown, APT, FML (FAQs), or XDoc.
+* `src/site/site.xml` controls the menus, skin, and layout.
+* `maven-project-info-reports-plugin` project summary, team/developers, licenses, dependencies, etc.
+
+#### Run the site lifecycle:
+
+```shell
+mvn verify site
+```
+
+IMPORTANT: `site` is a separate lifecycle and doesn’t run verify
+
+#### See docs locally
+
+Open in browser: `/target/site/index.html`
+
+#### Related commands:
+
+* `mvn site:stage` combines multi-module sites into one directory so the links between modules work.
+* `mvn site-deploy` uploads the site to the location set in `<distributionManagement><site>`.
+
+#### GitHub Pages:
+
+`.github/site.yml`
+
+### Plugins
+
+* **Site plugin** for project info reports: summary, team, licenses, SCM, issues, CI, dependencies and plugins
+* **Dokka** for API docs, because the **Javadoc plugin** ignores Kotlin sources.
 
 ## mvn deploy
 

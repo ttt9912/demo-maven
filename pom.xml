@@ -11,6 +11,38 @@
     <groupId>ch.ttt</groupId>
     <artifactId>demo-maven</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+
+    <!-- Those are primarly used for documentation (mvn site) -->
+    <name>demo-maven</name>
+    <description>Demo Spring Boot / Kotlin service</description>
+    <url>https://${github.owner}.github.io/${github.repo}/</url>
+    <licenses>
+        <license>
+            <name>TODO: your licence (e.g. Apache-2.0, or Proprietary)</name>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>ttt</id>
+            <name>Thomas</name>
+        </developer>
+    </developers>
+    <scm>
+        <url>https://github.com/${github.owner}/${github.repo}</url>
+        <connection>scm:git:https://github.com/${github.owner}/${github.repo}.git</connection>
+        <developerConnection>scm:git:git@github.com:${github.owner}/${github.repo}.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/${github.owner}/${github.repo}/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/${github.owner}/${github.repo}/actions</url>
+    </ciManagement>
+    <!-- -->
+
     <properties>
         <java.version>25</java.version>
         <kotlin.version>2.3.21</kotlin.version>
@@ -25,6 +57,15 @@
         <!-- Quality gates -->
         <jacoco.minimum.line.coverage>0.7</jacoco.minimum.line.coverage>
         <owasp.fail.cvss>7</owasp.fail.cvss>
+
+        <!-- For documentation fields above -->
+        <github.owner>ttt9912</github.owner>
+        <github.repo>demo-maven</github.repo>
+
+        <!-- Site (documentation) -->
+        <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
+        <maven-project-info-reports-plugin.version>3.9.0</maven-project-info-reports-plugin.version>
+        <dokka-maven-plugin.version>2.2.0</dokka-maven-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -58,6 +99,15 @@
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${maven-site-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <!-- ============================================================
                  validate phase
@@ -259,7 +309,7 @@
                 <configuration>
                     <input>${project.basedir}/src/main/kotlin,${project.basedir}/src/test/kotlin</input>
                     <report>
-                        <report>html:${project.build.directory}/detekt.html</report>
+                        <report>html:${project.build.directory}/site/detekt.html</report>
                         <report>xml:${project.build.directory}/detekt.xml</report>
                     </report>
                 </configuration>
@@ -273,8 +323,94 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ============================================================
+                 site lifecycle
+                 ============================================================ -->
+
+            <!-- Dokka: Kotlin API docs (maven-javadoc-plugin ignores Kotlin sources).
+                 Runs at pre-site and writes into target/site/dokka, linked from the site menu. -->
+            <plugin>
+                <groupId>org.jetbrains.dokka</groupId>
+                <artifactId>dokka-maven-plugin</artifactId>
+                <version>${dokka-maven-plugin.version}</version>
+                <configuration>
+                    <outputDir>${project.build.directory}/site/dokka</outputDir>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>dokka-site</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>dokka</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <!-- Reports rendered by `mvn site`. Run `./mvnw verify site` so test, coverage and
+         detekt results exist before the site is built. Output: target/site/index.html -->
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>${maven-project-info-reports-plugin.version}</version>
+                <reportSets>
+                    <reportSet>
+                        <!-- 'index' is left out: src/site/markdown/index.md is the home page -->
+                        <reports>
+                            <report>summary</report>
+                            <report>team</report>
+                            <report>licenses</report>
+                            <report>scm</report>
+                            <report>issue-management</report>
+                            <report>ci-management</report>
+                            <report>dependencies</report>
+                            <report>plugins</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- Unit + integration test results; re-uses the reports from `verify`
+                 instead of running the tests again -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report-only</report>
+                            <report>failsafe-report-only</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- Coverage report from target/jacoco.exec written during `verify` -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*ApplicationKt.class</exclude>
+                    </excludes>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <profiles>
         <!-- OWASP Dependency-Check: scans dependencies against the NVD for known CVEs.

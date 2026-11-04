@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site xmlns="http://maven.apache.org/SITE/2.0.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd">
+
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>2.1.0</version>
+    </skin>
+
+    <custom>
+        <fluidoSkin>
+            <topBarEnabled>true</topBarEnabled>
+            <sideBarEnabled>true</sideBarEnabled>
+        </fluidoSkin>
+    </custom>
+
+    <body>
+        <links>
+            <item name="GitHub" href="${project.scm.url}"/>
+        </links>
+
+        <menu name="Overview">
+            <item name="Introduction" href="index.html"/>
+        </menu>
+
+        <menu name="Code quality">
+            <item name="API docs (Dokka)" href="dokka/index.html"/>
+            <item name="Static analysis (detekt)" href="detekt.html"/>
+        </menu>
+
+        <!-- Project information + project reports (tests, coverage) from <reporting> -->
+        <menu ref="reports"/>
+    </body>
+</site>
