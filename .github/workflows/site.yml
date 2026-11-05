@@ -34,7 +34,7 @@ jobs:
       - name: Build site
         run: ./mvnw -B -ntp verify site
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v4 # upload target/site as a Pages artifact
         with:
           path: target/site
 
@@ -46,4 +46,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4 # site goes live at ttt9912.github.io/demo-maven
