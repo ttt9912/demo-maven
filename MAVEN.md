@@ -186,3 +186,7 @@ Release repositories usually reject a re-upload of the same version.
 
 Credentials don’t go in the POM. They go in `~/.m2/settings.xml` (or come from CI secrets), under a <server> whose <id>
 matches the repository id.
+
+#### GitHub Packages
+
+Artifacts visible at: https://github.com/ttt9912/demo-maven (Packages on the right)
