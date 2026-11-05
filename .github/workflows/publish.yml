@@ -2,12 +2,18 @@ name: Publish Maven package
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
   contents: read
   packages: write   # needed to upload to GitHub Packages
+
+# One run at a time. A run already in progress is allowed to finish but
+# queued runs collapse to the newest commit
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish:
