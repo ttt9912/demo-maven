@@ -147,6 +147,8 @@ Open in browser: `/target/site/index.html`
 
 `.github/site.yml`
 
+In GitHub, go to Settings → Pages and set the source to GitHub Actions.
+
 ### Plugins
 
 * **Site plugin** for project info reports: summary, team, licenses, SCM, issues, CI, dependencies and plugins
