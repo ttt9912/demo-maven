@@ -465,4 +465,22 @@
             </build>
         </profile>
     </profiles>
+
+    <!-- Target of `mvn deploy`: GitHub Packages (Maven registry of this repo).
+         Uploads the fat JAR + POM (+ checksums). SNAPSHOT and release versions use the
+         same URL; a release version can only be published once.
+         Credentials: a <server> with id "github" in settings.xml. In GitHub Actions,
+         setup-java generates it from GITHUB_TOKEN (see .github/workflows/publish.yml). -->
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/${github.owner}/${github.repo}</url>
+        </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/${github.owner}/${github.repo}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

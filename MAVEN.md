@@ -118,6 +118,8 @@ with the main artifact
 
 `mvn site` generates a project documentation website from your POM and any extra docs you’ve written.
 
+`site-deploy` uploads the site from <distributionManagement><site> (similar to how mvn deploy uploads the jar)
+
 Contains resources from:
 
 * Reports configured in the `<reporting>` section of the POM, such as Javadoc, Surefire test results, JaCoCo coverage,
@@ -149,6 +151,8 @@ Open in browser: `/target/site/index.html`
 
 In GitHub, go to Settings → Pages and set the source to GitHub Actions.
 
+Find the deployed Pages at: https://ttt9912.github.io/demo-maven/
+
 ### Plugins
 
 * **Site plugin** for project info reports: summary, team, licenses, SCM, issues, CI, dependencies and plugins
@@ -156,3 +160,29 @@ In GitHub, go to Settings → Pages and set the source to GitHub Actions.
 
 ## mvn deploy
 
+`mvn deploy` runs the whole default lifecycle, then uploads the **Maven artifacts** to a **remote Maven repository**.
+
+IT DOES NOT:
+
+- deploy the app
+- upload Docker image
+
+What happens at deploy: `maven-deploy-plugin:deploy` uploads the main artifact, the POM, and any attached artifacts (
+sources, javadoc, SBOM, signatures) to the repository set in `<distributionManagement>`
+
+#### Snapshots
+
+A version ending in `-SNAPSHOT` (like your 0.0.1-SNAPSHOT) goes to `snapshotRepository`, and anything else goes to
+`repository`.
+
+Release repositories usually reject a re-upload of the same version.
+
+Common targets:
+
+- Nexus or Artifactory
+- GitHub Packages
+
+#### Credentials
+
+Credentials don’t go in the POM. They go in `~/.m2/settings.xml` (or come from CI secrets), under a <server> whose <id>
+matches the repository id.

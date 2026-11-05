@@ -1,0 +1,36 @@
+name: Publish Maven package
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write   # needed to upload to GitHub Packages
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history for git-commit-id
+
+      # Also writes ~/.m2/settings.xml with a <server id="github"> whose
+      # username/password come from the env vars named below.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      # Runs the full lifecycle (tests, coverage, detekt, ...) and then uploads
+      - name: Deploy to GitHub Packages
+        run: ./mvnw -B -ntp deploy
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
