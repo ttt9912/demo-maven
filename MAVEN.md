@@ -167,6 +167,11 @@ IT DOES NOT:
 - deploy the app
 - upload Docker image
 
+Common targets:
+
+- Nexus or Artifactory
+- GitHub Packages
+
 What happens at deploy: `maven-deploy-plugin:deploy` uploads the main artifact, the POM, and any attached artifacts (
 sources, javadoc, SBOM, signatures) to the repository set in `<distributionManagement>`
 
@@ -176,11 +181,6 @@ A version ending in `-SNAPSHOT` (like your 0.0.1-SNAPSHOT) goes to `snapshotRepo
 `repository`.
 
 Release repositories usually reject a re-upload of the same version.
-
-Common targets:
-
-- Nexus or Artifactory
-- GitHub Packages
 
 #### Credentials
 
